@@ -1,0 +1,33 @@
+---
+
+- name: Prepare folders
+  file: path={{ item }} state=directory
+  with_items:
+    - "{{ grafana_dir }}"
+    - "{{ grafana_dashboards_dir }}"
+
+- name: Assemble config files
+  template: src={{ item.src }}.j2 dest={{ item.dest }}
+  with_items:
+    - src: docker-compose.yml
+      dest: "{{ grafana_dir }}/docker-compose.yml"
+    - src: datasources.yml
+      dest: "{{ grafana_dir }}/datasources.yml"
+    - src: dashboards.yml
+      dest: "{{ grafana_dir }}/dashboards/dashboards.yml"
+
+- name: Assemble consul service config
+  template: src={{ item.src }}.j2 dest={{ item.dest }}
+  with_items:
+    - src: consul.json
+      dest: "{{ consul_conf_dir }}/grafana.json"
+  notify: reload consul
+
+- name: Upload dashboards
+  copy: src=files/dashboards/{{ item }} dest={{ grafana_dashboards_dir }}/{{ item }}
+  with_items:
+    - docker_and_system.json
+    - node.json
+
+- name: Run service
+  shell: docker-compose up -d chdir={{ grafana_dir }}

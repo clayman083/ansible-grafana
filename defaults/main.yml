@@ -1,0 +1,23 @@
+---
+
+grafana_network:
+  name: backend
+  subnet: 10.8.0.0/16
+
+grafana:
+  host: "{{ private_network.address }}"
+  port: 3000
+
+grafana_service:
+  name: grafana
+  tags:
+    - "{{ env }}"
+  meta:
+    hostname: "{{ ansible_hostname }}"
+    tier: "{{ env }}"
+
+grafana_admin:
+  user: grafana
+  password: grafana
+
+grafana_domain: http://localhost

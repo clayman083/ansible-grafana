@@ -1,0 +1,42 @@
+---
+
+version: '3.5'
+
+volumes:
+  data:
+
+networks:
+  {{ grafana_network.name }}:
+    external: true
+
+volumes:
+  grafana_data:
+
+services:
+  server:
+    container_name: {{ grafana_container.name }}
+    image: {{ grafana_container.image }}
+    dns: {{ grafana_container.dns }}
+    environment:
+      - GF_SECURITY_ADMIN_USER={{ grafana_admin.user }}
+      - GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin.password }}
+      - GF_SERVER_ROOT_URL={{ grafana_domain }}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    labels:
+      org.label-schema.group: "monitoring"
+{% if env != 'local' %}
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "unixgram:///dev/log"
+        tag: grafana
+{% endif %}
+    networks:
+      - {{ grafana_network.name }}
+    ports:
+      - {{ grafana.host }}:{{ grafana.port }}:3000
+    restart: {{ grafana_container.restart }}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./datasources.yml:/etc/grafana/provisioning/datasources/all.yml
+      - ./dashboards:/etc/grafana/provisioning/dashboards
