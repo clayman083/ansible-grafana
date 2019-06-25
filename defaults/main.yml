@@ -1,23 +1,45 @@
 ---
 
-grafana_network:
-  name: backend
-  subnet: 10.8.0.0/16
-
 grafana:
+  dir: "{{ services_dir }}/grafana"
+  dashboards_dir: "{{ services_dir }}/grafana/dashboards"
+
   host: "{{ private_network.address }}"
   port: 3000
 
-grafana_service:
-  name: grafana
-  tags:
-    - "{{ env }}"
-  meta:
-    hostname: "{{ ansible_hostname }}"
-    tier: "{{ env }}"
+  container:
+    image: grafana/grafana:6.0.2
+    name: grafana
+    dns: "{{ private_network.address }}"
+    network: ""
+    restart: always
 
-grafana_admin:
-  user: grafana
-  password: grafana
+    syslog:
+      enabled: no
+      host: unixgram:///dev/log
+      tag: grafana
 
-grafana_domain: http://localhost
+  service:
+    name: grafana
+    tags:
+      - "{{ env }}"
+    meta:
+      hostname: "{{ ansible_hostname }}"
+      tier: "{{ env }}"
+
+  dashboards:
+    - docker_and_system.json
+    - node.json
+
+  datasources:
+    prometheus:
+      name: 'Prometheus'
+      type: 'prometheus'
+      url: 'http://prometheus.service.consul:9090'
+
+  frontend:
+    domain: grafana.example.com
+
+    auth:
+      user: grafana
+      password: grafana

@@ -5,37 +5,41 @@ version: '3.5'
 volumes:
   data:
 
+{% if grafana.contaner.network|default(False) %}
 networks:
-  {{ grafana_network.name }}:
+  {{ grafana.container.network.name }}:
     external: true
+{% endif %}
 
 volumes:
   grafana_data:
 
 services:
   server:
-    container_name: {{ grafana_container.name }}
-    image: {{ grafana_container.image }}
-    dns: {{ grafana_container.dns }}
+    container_name: {{ grafana.container.name }}
+    image: {{ grafana.container.image }}
+    dns: {{ grafana.container.dns }}
     environment:
-      - GF_SECURITY_ADMIN_USER={{ grafana_admin.user }}
-      - GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin.password }}
-      - GF_SERVER_ROOT_URL={{ grafana_domain }}
+      - GF_SECURITY_ADMIN_USER={{ grafana.frontend.auth.user }}
+      - GF_SECURITY_ADMIN_PASSWORD={{ grafana.frontend.auth.password }}
+      - GF_SERVER_ROOT_URL={{ grafana.frontend.domain }}
       - GF_USERS_ALLOW_SIGN_UP=false
     labels:
       org.label-schema.group: "monitoring"
-{% if env != 'local' %}
+{% if grafana.container.syslog.enabled %}
     logging:
       driver: syslog
       options:
-        syslog-address: "unixgram:///dev/log"
-        tag: grafana
+        syslog-address: "{{ grafana.container.syslog.host }}"
+        tag: {{ grafana.container.syslog.tag }}
 {% endif %}
+{% if grafana.contaner.network|default(False) %}
     networks:
-      - {{ grafana_network.name }}
+      - {{ grafana.container.network.name }}
+{% endif %}
     ports:
       - {{ grafana.host }}:{{ grafana.port }}:3000
-    restart: {{ grafana_container.restart }}
+    restart: {{ grafana.container.restart }}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./datasources.yml:/etc/grafana/provisioning/datasources/all.yml
