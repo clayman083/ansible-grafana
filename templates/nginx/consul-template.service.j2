@@ -1,5 +1,0 @@
-#!/bin/sh
-
-exec consul-template \
-     -consul-addr "{{ discovery.host }}:{{ discovery.port }}" \
-     -template "/etc/consul-templates/grafana.conf:/etc/nginx/conf.d/grafana.conf:sv hup nginx"

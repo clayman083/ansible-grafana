@@ -1,0 +1,50 @@
+---
+
+- name: Converge
+  hosts: all
+  become: true
+
+  vars:
+    env: develop
+
+    services_dir: /opt/services
+
+    public_network: "{{ ansible_eth0['ipv4'] }}"
+    private_network: "{{ ansible_eth0['ipv4'] }}"
+
+    grafana:
+      dir: "{{ services_dir }}/grafana"
+      dashboards_dir: "{{ services_dir }}/grafana/dashboards"
+
+      host: "{{ private_network.address }}"
+      port: 3000
+
+      container:
+        image: grafana/grafana:latest
+        name: grafana
+        dns: "{{ private_network.address }}"
+        network: ""
+        restart: always
+
+        syslog:
+          enabled: no
+          host: unixgram:///dev/log
+          tag: grafana
+
+      dashboards: []
+
+      datasources: {}
+
+      frontend:
+        domain: grafana.example.com
+
+        auth:
+          user: grafana
+          password: grafana
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+
+  tasks:
+    - name: Install test requirements
+      apt: name=curl
