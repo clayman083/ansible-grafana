@@ -1,11 +1,22 @@
 ---
 
 datasources:
-  - access: 'proxy'
+{% if grafana.datasources.prometheus|default(False) %}
+  - name: {{ grafana.datasources.prometheus.name }}
+    type: prometheus
+    access: proxy
+    url: {{ grafana.datasources.prometheus.url }}
     editable: true
     is_default: true
-    name: 'Prometheus'
     org_id: 1
-    type: 'prometheus'
-    url: 'http://prometheus.service.consul:9090'
     version: 1
+{% endif %}
+
+{% if grafana.datasources.loki|default(False) %}
+  - name: {{ grafana.datasources.loki.name }}
+    type: loki
+    access: proxy
+    url: {{ grafana.datasources.loki.url }}
+    jsonData:
+      maxLines: 1000
+{% endif %}
