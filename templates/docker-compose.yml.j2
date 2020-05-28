@@ -2,23 +2,30 @@
 
 version: '3.5'
 
-volumes:
-  data:
-
-{% if grafana.contaner.network|default(False) %}
+{% if grafana.contaner.networks|default(False) %}
 networks:
-  {{ grafana.container.network.name }}:
+{% for network in grafana.container.networks|default([]) %}
+  {{ network.name }}:
     external: true
+{% endfor %}
 {% endif %}
 
 volumes:
-  grafana_data:
+  data:
 
 services:
   server:
     container_name: {{ grafana.container.name }}
     image: {{ grafana.container.image }}
+{% if grafana.container.dns|default(False) %}
     dns: {{ grafana.container.dns }}
+{% endif %}
+{% if grafana.container.labels|default(False) %}
+    labels:
+{% for label in grafana.container.labels|default([]) %}
+      - {{ label }}
+{% endfor %}
+{% endif %}
     environment:
       - GF_SECURITY_ADMIN_USER={{ grafana.frontend.auth.user }}
       - GF_SECURITY_ADMIN_PASSWORD={{ grafana.frontend.auth.password }}
@@ -33,14 +40,16 @@ services:
         syslog-address: "{{ grafana.container.syslog.host }}"
         tag: {{ grafana.container.syslog.tag }}
 {% endif %}
-{% if grafana.contaner.network|default(False) %}
+{% if grafana.container.networks|default(False) %}
     networks:
-      - {{ grafana.container.network.name }}
+{% for network in grafana.container.networks|default([]) %}
+      - {{ network.name }}
+{% endfor %}
 {% endif %}
     ports:
       - {{ grafana.host }}:{{ grafana.port }}:3000
     restart: {{ grafana.container.restart }}
     volumes:
-      - grafana_data:/var/lib/grafana
+      - data:/var/lib/grafana
       - ./datasources.yml:/etc/grafana/provisioning/datasources/all.yml
       - ./dashboards:/etc/grafana/provisioning/dashboards

@@ -11,7 +11,8 @@ grafana:
     image: grafana/grafana:latest
     name: grafana
     dns: "{{ private_network.address }}"
-    network: ""
+    networks: []
+    labels: []
     restart: always
 
     syslog:
@@ -28,6 +29,11 @@ grafana:
       name: 'Prometheus'
       type: 'prometheus'
       url: 'http://prometheus.service.consul:9090'
+
+    loki:
+      name: 'Loki'
+      type: 'loki'
+      url: 'http://loki.service.consul:3100'
 
   frontend:
     domain: grafana.example.com
